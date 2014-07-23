@@ -48,6 +48,7 @@ class PyQueueShell(cmd.Cmd, object):
     do_store = None
     do_select = None
     do_show = None
+    do_inspect = None
 
     def __init__(self):
         """Init method"""
@@ -410,4 +411,33 @@ class PyQueueShell(cmd.Cmd, object):
             lines.append('%d: select %s:' % (idx, name[7:]))
             for key,value in _kwargs.items():
                 lines.append("    %s: %s" % (key, value))
+        return lines
+
+    def _inspect_selected(self):
+        """
+        Parse mails from selection and print their information
+        ..Usage: inspect selected
+        """
+        if self.selector.mails is None:
+            return ['Nothing in selection']
+        else:
+            lines = []
+            for m in self.selector.mails:
+                lines.append('** {:<20} {:<20} {} '.format(
+                        str(m.date), m.sender, m.qid).ljust(78,'*'))
+                m.parse()
+                for k, vals in vars(m.head).items():
+                     for val in vals:
+                         if '\n' in val:
+                             sublines = val.split('\n')
+                             lines.append('  {:<15} : {}'.format(
+                                     k, sublines[0]))
+                             for l in sublines[1:]:
+                                 lines.append(
+                                     '                    {}'.format(l.strip()))
+
+                         else:
+                             lines.append('  {:<15} : {}'.format( k, val))
+
+                lines.append('')
         return lines
